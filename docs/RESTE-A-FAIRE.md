@@ -35,7 +35,8 @@ Prérequis : installer Node LTS et pnpm (absents de la machine).
 
 ### 1.3 La télécommande (`apps/mobile-remote`)
 
-PWA servie sur le réseau local. Pavé directionnel, OK, Retour, lecture/pause, volume.
+PWA servie sur le réseau local, joignable sur **`http://nucflixchill.local:<port>`**
+ou `http://192.168.1.21:<port>`. Pavé directionnel, OK, Retour, lecture/pause, volume.
 
 **Doit inclure un appairage par code** (un code s'affiche sur la TV, on le saisit sur
 le téléphone) : sans cela, tout appareil du Wi-Fi peut éteindre le téléviseur.
@@ -139,7 +140,7 @@ Wi-Fi le contrôle total du navigateur.
 | **SSD M.2 2242** dans le slot libre | Le disque mécanique est le dernier vrai goulot. Démarrage et lancement d'applications nettement plus rapides. | ~25-30 € |
 | Adaptateur **USB-CEC** | Permettrait d'allumer/éteindre la TV depuis le NUC. Le port HDMI passe par un pont LSPCON, le bus CEC n'est pas exposé. | ~40 € |
 | **Bluetooth** | Matériel présent, service inactif. Utile pour une télécommande physique ou un clavier de secours. | 0 € |
-| **Câble Ethernet** | Supprimerait la principale source de latence et de saccades. | ~5 € |
+| **Câble Ethernet** | Supprimerait la principale source de latence et de saccades. ⚠️ Nécessiterait d'adapter la configuration réseau, aujourd'hui statique sur le Wi-Fi. | ~5 € |
 | Boîtier certifié (Fire TV, Apple TV) | Seule façon d'avoir Netflix en 1080p. Le shell resterait l'accueil principal. | ~40 € |
 
 ---
@@ -152,5 +153,6 @@ Wi-Fi le contrôle total du navigateur.
 | **Kodi** | Écarté. Packagé et mature, mais gère très mal Netflix et Disney+. |
 | **Infrastructure as Code (Ansible)** | Écarté à la demande de l'utilisateur. Compensé par le [journal](JOURNAL-SOCLE.md) qui consigne chaque modification. |
 | **Docker** | Écarté. Aucun service n'a besoin d'être conteneurisé ; coûterait RAM et temps de démarrage. |
+| **Réservation DHCP sur la box** | Recommandée en complément de l'adresse statique, pour que la box n'attribue jamais `192.168.1.21` à un autre appareil. **Non faite.** |
 | **363 Go de disque non alloués** | Laissés en réserve. Le NUC ne stocke aucun média. Le jour venu : créer un volume séparé, ne pas étendre la racine. |
 | **Qualité DRM** | 720p accepté sur Netflix, Disney+ et Prime. Limite structurelle de Widevine sous Linux, pas du matériel. |

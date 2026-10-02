@@ -290,8 +290,66 @@ du shell ne tourne plus. Le retour passera par le CDP, donc par le backend.
 | `ydotoold` | Clavier virtuel | ❌ `disabled` |
 | `nucflix-web` | Pages du shell sur `127.0.0.1:8080` | ❌ `disabled` |
 | `ufw` | Pare-feu | ✅ `enabled` |
+| `avahi-daemon` | Nom local `nucflixchill.local` | ✅ `enabled` |
 
 > ⚠️ **Au redémarrage, l'écran reste noir** tant que les trois premiers ne sont pas activés.
+
+---
+
+### 🌐 Réseau : adresse fixe et nom local
+
+#### Adresse statique
+
+`/etc/netplan/00-installer-config.yaml` — passage de `dhcp4: true` à une adresse fixe.
+**L'adresse `192.168.1.21` est conservée volontairement** : c'est celle par laquelle la
+session SSH de travail passait, la changer aurait coupé la connexion en cours.
+
+```yaml
+dhcp4: false
+addresses:
+  - 192.168.1.21/24
+routes:
+  - to: default
+    via: 192.168.1.254
+nameservers:
+  addresses: [192.168.1.254]
+```
+
+**Méthode appliquée, le réseau étant le réglage le plus risqué du chantier :**
+
+1. Sauvegarde dans `…yaml.bak`
+2. `netplan generate` pour valider la syntaxe **avant** toute application
+3. Filet de sécurité : `systemd-run --on-active=180` armé pour restaurer la sauvegarde
+   automatiquement en cas de perte de la main
+4. Application **détachée** de la session SSH (`systemd-run --no-block`), pour qu'elle
+   aille au bout même si la connexion saute
+5. Vérifications — adresse, passerelle, DNS, internet, session SSH, Jellyfin
+6. Désarmement du filet (vérifié : `netplan-revert.service` n'a jamais tourné)
+
+> ⚠️ **Limite assumée :** la box ignore que cette adresse est prise. Si son bail expire et
+> qu'elle l'attribue à un autre appareil, il y aura conflit. **Une réservation DHCP sur
+> la Livebox reste recommandée** en complément.
+
+#### Nom local (mDNS)
+
+```bash
+sudo apt-get install avahi-daemon avahi-utils
+sudo systemctl enable --now avahi-daemon
+sudo ufw allow 5353/udp comment 'mDNS - nom .local sur le reseau'
+```
+
+Vérifié : `nucflixchill.local → 192.168.1.21`.
+
+**Intérêt pour la télécommande :** le téléphone pourra viser un nom plutôt qu'une
+adresse, ce qui continuera de fonctionner même si l'adresse change un jour. Fonctionne
+nativement sur iOS et Android récent.
+
+#### Erreur de vérification à retenir
+
+Un contrôle `grep 'dhcp4: false'` **sans `sudo`** a renvoyé « non » alors que la
+configuration était correcte : le fichier netplan est en `0600`, la lecture était
+refusée. Toujours vérifier un fichier protégé avec les droits adéquats, sinon le
+contrôle ment.
 
 ---
 
