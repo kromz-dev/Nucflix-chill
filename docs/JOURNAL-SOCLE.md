@@ -54,6 +54,8 @@ et `nucflix` appartient au groupe `input` — aucune règle `udev` supplémentai
 | `/usr/local/bin/nucflix-browser` | Lanceur Chrome avec tous ses drapeaux |
 | `/etc/systemd/system/nucflix-kiosk.service` | Service d'affichage (cage + Chrome) |
 | `/etc/systemd/system/ydotoold.service` | Service du clavier virtuel |
+| `/etc/systemd/system/nucflix-web.service` | Serveur local des pages (127.0.0.1:8080) |
+| `/opt/nucflix/video.html` · `/opt/nucflix/drm.html` | Pages de test vidéo et DRM |
 | `/etc/modules-load.d/uinput.conf` | Chargement du module au démarrage |
 
 #### 6. Services
@@ -141,9 +143,51 @@ C'est la dernière inconnue du socle.
 
 ---
 
+### 🔐 Test de lecture DRM (Widevine)
+
+Source : asset de démonstration public **Shaka « Angel One »** (DASH + Widevine),
+serveur de licence `https://cwip-shaka-proxy.appspot.com/no_auth`.
+Lecteur : Shaka Player 4.7.11. Page : `/opt/nucflix/drm.html`.
+**Aucun compte Netflix n'a été utilisé.**
+
+#### Obstacle résolu : le contexte sécurisé
+
+Premier essai en `file://` → échec Shaka **6002**.
+Cause : les EME (Encrypted Media Extensions) exigent un **contexte sécurisé** ;
+`file://` n'en est pas un. Résolu en servant la page depuis `http://127.0.0.1:8080`.
+
+> Nouveau service : `nucflix-web.service` — `python3 -m http.server 8080 --bind 127.0.0.1`.
+> **Lié à la boucle locale uniquement** : vérifié injoignable depuis `192.168.1.21`.
+> Conforme à la règle d'architecture « l'interface TV n'est visible que sur la TV ».
+
+#### Résultats
+
+| Mesure | Vidéo normale (VP9 1080p60) | Vidéo protégée (Widevine) |
+|---|---|---|
+| Déchiffrement | — | ✅ `com.widevine.alpha` |
+| Résolution | 1920 × 1080 | 768 × 576 *(limite de l'asset)* |
+| Images perdues | 0 / 3180 | 0 / 890 |
+| **Moteur vidéo GPU (VCS)** | **16 %** | **0 %** |
+| Décodeur effectif | **matériel** | **logiciel (CPU)** |
+| Charge processeur | ~21 % | ~4,5 % |
+
+#### Conclusions
+
+1. **Netflix / Disney+ / Prime fonctionneront.** Widevine est opérationnel.
+2. **Le DRM contourne le décodage matériel** — confirmé par `VCS = 0 %`.
+   C'est le comportement de Widevine sous Linux, pas une erreur de configuration.
+   C'est aussi la raison du plafond à 720p.
+3. **Charge estimée à ~10 % de CPU en 720p** (extrapolation depuis 768×576,
+   ~2× les pixels). **Non mesuré** : le test réel exige un compte, donc la télécommande.
+
+> **Le point ouvert n°1 (« le décodage DRM tient-il sur un J3455 ? ») est levé.**
+> Les trois usages visés sont validés : Jellyfin et YouTube en matériel avec une
+> marge très large, services protégés en logiciel avec une marge confortable.
+
+---
+
 ### ❌ Pas encore fait
 
-0. **Test de lecture DRM (Netflix)** — la dernière inconnue
 
 1. **Activation au démarrage** des deux services
 2. Pare-feu (`ufw`) — aucun n'est installé
@@ -170,8 +214,9 @@ sudo rm /etc/sudoers.d/nucflix
 ### 🔄 Comment tout défaire
 
 ```bash
-sudo systemctl stop nucflix-kiosk ydotoold
-sudo rm /etc/systemd/system/nucflix-kiosk.service /etc/systemd/system/ydotoold.service
+sudo systemctl stop nucflix-kiosk ydotoold nucflix-web
+sudo rm /etc/systemd/system/nucflix-kiosk.service /etc/systemd/system/ydotoold.service \
+       /etc/systemd/system/nucflix-web.service
 sudo systemctl daemon-reload
 sudo userdel -r nucflix
 sudo rm -rf /opt/nucflix /usr/local/bin/nucflix-browser /etc/modules-load.d/uinput.conf
