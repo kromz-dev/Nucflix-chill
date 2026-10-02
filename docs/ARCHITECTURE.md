@@ -1,7 +1,7 @@
 # 🏗️ Architecture
 
 > **Document vivant.** Il consigne ce qui est arrêté, ce qui est encore ouvert, et pourquoi.
-> Dernière mise à jour : 2 octobre 2026.
+> Dernière mise à jour : 2 octobre 2026 (après la construction du socle et du shell).
 
 ---
 
@@ -93,7 +93,20 @@ Les pistes identifiées — **aucune n'est retenue à ce stade** :
 
 Points à instruire pour chaque piste : empreinte mémoire réelle, latence de bascule, conservation de l'état de lecture, et **par quel mécanisme l'utilisateur revient au shell** (la touche `BACK` de Netflix ne nous appartient pas).
 
-Cette décision sera arbitrée lors de la conception du sous-projet 1, mesures en main plutôt que sur intuition.
+#### Ce que la construction a appris
+
+**Le plan de contrôle n'est pas optionnel.** Quelle que soit la piste retenue, le retour
+à l'accueil ne peut pas venir de la page affichée : dès qu'une application tierce occupe
+l'écran, aucun code du projet n'y tourne. Il doit venir du **Chrome DevTools Protocol**,
+exposé sur `127.0.0.1:9222` et vérifié non joignable depuis le réseau.
+
+**L'état actuel est la troisième piste**, la plus simple : une seule page, le shell cède
+la place par changement d'adresse. Elle suffit à lancer les applications, mais le retour
+n'est pas encore implémenté — c'est la limite la plus visible du projet aujourd'hui.
+
+**La décision reste ouverte** entre onglets et fenêtres. Elle sera arbitrée au moment du
+backend, avec des mesures de mémoire réelles plutôt que sur intuition. Repère utile :
+le kiosque consomme **1,4 Go** sur 3,4 Go avec une seule page affichée.
 
 ---
 
@@ -137,11 +150,56 @@ Objectif explicite du projet : l'interface TV s'affiche sur le téléviseur, pas
 
 Ces questions restent à trancher. Elles sont listées ici pour qu'aucune ne soit perdue en route.
 
+### Résolus
+
+| # | Question | Réponse |
+|---|---|---|
+| 1 | Le décodage DRM tient-il sur un J3455 ? | ✅ **Oui.** Widevine opérationnel, 0 image perdue. Le DRM contourne le décodage matériel (`VCS = 0 %` contre 16 % en lecture normale) : le processeur décode, à ~4,5 % en 768×576. Estimation ~10 % en 720p — **extrapolation, pas mesure**, à confirmer avec un vrai compte. |
+| — | Le décodage matériel fonctionne-t-il pour les contenus non protégés ? | ✅ **Oui, largement.** VP9 1080p à 60 i/s, 0 image perdue, GPU à 220 MHz sur 700 et au repos 42 % du temps. H.264, HEVC 8 et **10 bits**, VP9, VP8 confirmés. Pas d'AV1. |
+| — | Faut-il adopter un shell existant (Plasma Bigscreen, Kodi) ? | ❌ **Non.** Voir §8. |
+
+### Toujours ouverts
+
 | # | Question | Impact |
 |---|---|---|
-| 1 | Le décodage DRM 720p en logiciel tient-il sur un J3455 ? | **Bloquant.** Conditionne la présence même des applications DRM. À mesurer en premier. |
-| 2 | Quel modèle d'exécution des applications retenir ? (§4) | Fort — empreinte mémoire et complexité du backend |
-| 3 | Par quel geste revient-on au shell depuis une application tierce ? | Fort — ergonomie de la télécommande |
+| 2 | Onglets ou fenêtres pour les applications ? (§4) | Fort — empreinte mémoire et complexité du backend. **À trancher avec le backend.** |
+| 3 | Par quel geste revient-on au shell depuis une application tierce ? | **Fort — c'est la limite la plus visible aujourd'hui.** Le mécanisme est connu (le CDP), le geste reste à définir. |
 | 4 | Un boîtier certifié dédié à la 1080p DRM doit-il être intégré au design ? | Moyen — ajouterait une tuile de bascule d'entrée HDMI |
+| 7 | Forcer un `--user-agent` de téléviseur pour obtenir `youtube.com/tv` ? | Moyen — le drapeau est global à Chrome, il affecterait tous les sites |
 | 5 | Faut-il gérer le Bluetooth (télécommande ou clavier physique de secours) ? | Faible — matériel présent, service inactif |
 | 6 | Un adaptateur USB-CEC pour piloter l'alimentation du téléviseur ? | Faible — achat matériel, fonction de confort |
+
+---
+
+## 8. Décisions écartées, et pourquoi
+
+### Plasma Bigscreen
+
+Shell de télévision du projet KDE, proposé comme alternative au développement du nôtre.
+**Écarté**, pour trois raisons dans l'ordre d'importance :
+
+**Il ne lit pas les services protégés.** Pour Netflix, Disney+ et Prime, Bigscreen
+lancerait un navigateur. Le résultat serait donc **Plasma + Chrome** au lieu de Chrome
+seul — tout l'environnement KDE payé pour obtenir une grille de tuiles.
+
+**Le coût mémoire est hors budget.** +500 à 800 Mo pour le bureau KDE, sur 2,0 Go
+disponibles. Le shell actuel coûte **0 Mo de plus** : c'est une page dans le navigateur
+déjà lancé.
+
+**Il n'est pas packagé pour Ubuntu 26.04** (`plasma-bigscreen` et
+`plasma-remotecontrollers` introuvables), ce qui imposerait de compiler KDE 6 et Qt 6
+sur un Celeron J3455. L'argument « c'est déjà fait » s'effondre.
+
+> À retenir malgré tout : leurs partis pris sur la gestion des télécommandes et du focus
+> méritent l'inspiration, sans importer leur pile logicielle.
+
+### Kodi
+
+Packagé dans Ubuntu et mature, mais gère très mal Netflix et Disney+ — extensions non
+officielles et DRM laborieux. Or ces services font partie du périmètre.
+
+### Infrastructure as Code (Ansible)
+
+Écarté à la demande de l'utilisateur, qui préfère une construction directe sur la
+machine. **Compensation adoptée :** le [journal du socle](JOURNAL-SOCLE.md) consigne
+chaque modification, chaque mesure, et la procédure de retour en arrière.

@@ -235,13 +235,73 @@ qu'agrandir la racine.
 
 ---
 
+
+---
+
+### 🎨 Shell TV — première version
+
+Code source : [`apps/tv-shell/`](../apps/tv-shell/), déployé dans `/opt/nucflix/shell/`
+et servi par `nucflix-web.service` sur `http://127.0.0.1:8080/shell/`.
+
+| Fichier | Rôle |
+|---|---|
+| `styles.css` | Jetons de couleur, échelle d'espacement, zone sûre overscan (4,5vh), unités en `vh` |
+| `index.html` | Structure sémantique, barre d'état, aide de navigation |
+| `app.js` | Catalogue, navigation spatiale, défilement des rangées, horloge |
+| `config.json` | Adresse Jellyfin, réglable sans toucher au code |
+| `diagnostic.html` | État de la machine |
+
+**Partis pris d'interface** — une TV n'est pas un site web :
+
+- Unités en `vh` partout : l'interface reste proportionnelle quelle que soit la résolution
+- **Zone sûre de 4,5vh** : les téléviseurs rognent les bords de l'image
+- Focus signalé par **quatre signaux cumulés** — agrandissement, bordure, fond, halo —
+  pour rester lisible à trois mètres
+- Accent coloré **réservé au focus** : rien d'autre dans l'interface ne l'utilise
+- Aucun défilement vertical, aucun curseur
+- Boutons natifs : accessibles au clavier et aux lecteurs d'écran sans effort
+- **Monogrammes et non logos de marque** : reproduire les logos de Netflix ou Disney
+  poserait un problème, un monogramme reste reconnaissable
+
+**Deux défauts repérés sur la première capture, corrigés :**
+
+1. La 6ᵉ tuile débordait de l'écran → la rangée **glisse horizontalement** pour garder la
+   tuile sélectionnée visible, avec une réserve de fin de piste contre l'overscan.
+2. Le symbole d'extinction s'affichait en carré vide (glyphe absent de la police) →
+   les symboles système passent en **SVG dessiné**.
+
+**Jellyfin branché.** Serveur `media-stack`, Jellyfin 12.1.0 sur
+`http://192.168.1.150:8096`, latence 4,6 ms en Wi-Fi. Chaîne vérifiée de bout en bout :
+accueil → tuile → ouverture sur le téléviseur, pilotée au clavier virtuel.
+
+> Pour la connexion sans clavier : Jellyfin propose **« Connexion rapide »** — un code à
+> six chiffres s'affiche sur la TV et se valide depuis un appareil déjà connecté.
+
+**Limite connue :** aucun retour à l'accueil. Une fois une application ouverte, le code
+du shell ne tourne plus. Le retour passera par le CDP, donc par le backend.
+
+---
+
+### 📦 Récapitulatif des services
+
+| Service | Rôle | Au démarrage |
+|---|---|---|
+| `nucflix-kiosk` | `cage` + Chrome plein écran | ❌ `disabled` |
+| `ydotoold` | Clavier virtuel | ❌ `disabled` |
+| `nucflix-web` | Pages du shell sur `127.0.0.1:8080` | ❌ `disabled` |
+| `ufw` | Pare-feu | ✅ `enabled` |
+
+> ⚠️ **Au redémarrage, l'écran reste noir** tant que les trois premiers ne sont pas activés.
+
+---
+
 ### ❌ Pas encore fait
 
+La liste complète et priorisée est dans [**RESTE-A-FAIRE.md**](RESTE-A-FAIRE.md).
 
-1. **Activation au démarrage** des deux services
-2. Correctifs de démarrage : `networkd-wait-online`, `fwupd-refresh`, `crashkernel`, `zram`, écran de démarrage
-   → tous nécessitent un redémarrage pour être validés
-3. Durcissement SSH — **délibérément reporté** tant que l'affichage n'est pas autonome au boot
+En résumé : le démarrage automatique et les correctifs de boot (un seul redémarrage
+suffirait pour les valider), le backend et la télécommande, puis le durcissement SSH —
+**délibérément reporté** tant que l'affichage n'est pas autonome au démarrage.
 
 ---
 
