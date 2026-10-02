@@ -66,7 +66,7 @@ Dépôt en **monorepo pnpm**, découpé en trois applications et une couche syst
 
 | Paquet | Rôle |
 |---|---|
-| `apps/tv-shell` | L'interface affichée sur le téléviseur. Lanceur, rangées de tuiles, navigation spatiale, barre d'état. |
+| `apps/tv-shell` | L'interface affichée sur le téléviseur. Lanceur, rangées de tuiles, navigation spatiale, barre d'état. **Première version fonctionnelle.** |
 | `apps/mobile-remote` | La télécommande. PWA accessible depuis le réseau local sur smartphone. |
 | `apps/system-backend` | Le cerveau. Transport temps réel entre la télécommande et la TV, injection d'événements clavier, commandes système (volume, veille, extinction), cycle de vie des applications. |
 | `packages/*` | Code partagé : protocole de commandes, types, catalogue d'applications. |
@@ -98,7 +98,7 @@ Le projet est découpé en quatre sous-projets séquentiels. Chacun possède sa 
 | # | Sous-projet | Objet | État |
 |---|---|---|---|
 | **1** | **Socle système** | Transformer Ubuntu Server en appliance TV : correctifs de l'audit, kiosque Wayland, autologin, VAAPI, audio HDMI, injection clavier, réseau, pare-feu, services systemd | 🟡 En conception |
-| **2** | **Shell TV** | Le lanceur et son design : tuiles, navigation spatiale, focus, zone sûre overscan, typographie 10-foot | ⚪ À faire |
+| **2** | **Shell TV** | Le lanceur et son design : tuiles, navigation spatiale, focus, zone sûre overscan, typographie 10-foot | 🟡 Première version |
 | **3** | **Télécommande** | PWA, protocole temps réel, pavé directionnel, contrôles de lecture | ⚪ À faire |
 | **4** | **Intégration des apps** | Jellyfin, YouTube TV, Twitch, lancement et retour des applications DRM | ⚪ À faire |
 
@@ -126,4 +126,4 @@ Jellyfin tourne sur une **machine séparée** du réseau local : le NUC est un p
 
 ## 📄 État du projet
 
-🚧 **En conception.** Aucune application n'est encore implémentée. Le travail en cours porte sur la spécification du socle système.
+🚧 **En construction.** Le socle système fonctionne (affichage 1080p, son HDMI, clavier virtuel, décodage matériel, pare-feu) et une première version du shell TV s'affiche sur le téléviseur. Restent le démarrage automatique, la télécommande et l'intégration des applications.

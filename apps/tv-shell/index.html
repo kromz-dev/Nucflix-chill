@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Nucflix &amp; Chill</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="barre">
+    <h1 class="marque">🍿 Nucflix <span class="suite">&amp; Chill</span></h1>
+    <div class="etat">
+      <span class="reseau" id="reseau" data-ok="oui">Wi-Fi connecté</span>
+      <span class="date" id="date"></span>
+      <span class="heure" id="heure">--:--</span>
+    </div>
+  </header>
+
+  <main class="rangees" id="rangees" aria-label="Écran d'accueil"></main>
+
+  <footer class="aide">
+    <span><kbd>▲</kbd><kbd>▼</kbd><kbd>◀</kbd><kbd>▶</kbd> Naviguer</span>
+    <span><kbd>OK</kbd> Ouvrir</span>
+    <span><kbd>←</kbd> Retour</span>
+  </footer>
+
+  <div class="voile" id="voile" role="status" aria-live="polite">
+    <p id="voile-texte"></p>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

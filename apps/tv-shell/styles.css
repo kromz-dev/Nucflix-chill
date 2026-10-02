@@ -1,0 +1,243 @@
+/* ===================================================================
+   Nucflix & Chill — feuille de style du shell TV
+   Cible unique : 1920x1080, vu a ~3 metres, pilote au pave directionnel.
+   Unites en vh pour rester proportionnel si la resolution change.
+   =================================================================== */
+
+:root {
+  /* Surfaces — gris tres sombres, neutres, sans teinte violette */
+  --fond:        #08090d;
+  --fond-haut:   #10131c;
+  --surface:     #171b26;
+  --surface-haut:#1f2433;
+  --bordure:     #2b3141;
+
+  /* Texte */
+  --texte:       #f2f4f8;
+  --texte-doux:  #9aa2b4;
+  --texte-faible:#636b7d;
+
+  /* Accent unique, repris du logo. Reserve au focus : rien d'autre
+     dans l'interface ne doit utiliser cette couleur. */
+  --accent:      #ff5f4d;
+  --accent-clair:#ffb26b;
+
+  /* Zone de securite : les televiseurs rognent les bords de l'image */
+  --marge-sure:  4.5vh;
+
+  /* Echelle d'espacement — multiples de 0.5vh, aucune valeur inventee */
+  --e1: 1vh;  --e2: 2vh;  --e3: 3vh;  --e4: 4vh;  --e6: 6vh;
+
+  --rayon:       1.4vh;
+  --transition:  180ms cubic-bezier(.2,.7,.3,1);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body {
+  height: 100%;
+  overflow: hidden;            /* une interface TV ne defile jamais */
+  background: var(--fond);
+  color: var(--texte);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  /* Pas de curseur : il n'y a pas de souris sur un televiseur */
+  cursor: none;
+  user-select: none;
+}
+
+body {
+  background: radial-gradient(120vh 80vh at 18% -10%, var(--fond-haut) 0%, var(--fond) 70%);
+  display: flex;
+  flex-direction: column;
+  padding: var(--marge-sure) 0;
+}
+
+/* ---------- Barre d'etat ---------- */
+
+.barre {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 0 var(--marge-sure);
+  flex-shrink: 0;
+}
+
+.marque {
+  font-size: 3.4vh;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+.marque .suite {
+  background: linear-gradient(90deg, var(--accent), var(--accent-clair));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.etat {
+  display: flex;
+  align-items: baseline;
+  gap: var(--e3);
+  color: var(--texte-doux);
+  font-size: 2.1vh;
+  font-weight: 600;
+}
+.etat .heure {
+  font-size: 3.2vh;
+  font-weight: 300;
+  color: var(--texte);
+  font-variant-numeric: tabular-nums;
+}
+.etat .reseau[data-ok="non"] { color: var(--accent); }
+
+/* ---------- Corps : les rangees ---------- */
+
+.rangees {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--e6);
+  padding: 0 var(--marge-sure);
+  min-height: 0;
+}
+
+.rangee > h2 {
+  font-size: 2.2vh;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--texte-faible);
+  margin-bottom: var(--e2);
+}
+
+.tuiles {
+  display: flex;
+  gap: var(--e3);
+  list-style: none;
+  /* Reserve de fin de piste : la derniere tuile ne colle jamais au bord,
+     ce qui la protege de l'overscan du televiseur. */
+  padding-right: var(--e4);
+}
+
+/* ---------- Piste glissante ----------
+   La rangee defile horizontalement pour garder la tuile selectionnee a l'ecran.
+   Le padding + marge negative laisse respirer l'agrandissement et le halo du
+   focus, tout en clippant proprement au-dela. */
+
+.piste {
+  padding: var(--e3);
+  margin: calc(var(--e3) * -1);
+  overflow: hidden;
+  /* Degrade sur le bord droit : indique qu'il reste des tuiles */
+  -webkit-mask-image: linear-gradient(90deg, #000 0, #000 97%, transparent 100%);
+          mask-image: linear-gradient(90deg, #000 0, #000 97%, transparent 100%);
+}
+
+.tuiles {
+  position: relative;     /* repere stable pour calculer le defilement */
+  transition: transform var(--transition);
+  will-change: transform;
+}
+
+/* ---------- Une tuile ---------- */
+
+.tuile {
+  all: unset;                       /* on repart d'un <button> nu */
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: var(--e1);
+  width: 24vh;
+  height: 15.5vh;
+  padding: var(--e2);
+  background: var(--surface);
+  border: 0.35vh solid var(--bordure);
+  border-radius: var(--rayon);
+  transition: transform var(--transition), background var(--transition),
+              border-color var(--transition), box-shadow var(--transition);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Pastille d'identite : un monogramme ou un symbole dessine.
+   Jamais un logo de marque copie. */
+.tuile .marqueur {
+  position: absolute;
+  top: var(--e2);
+  left: var(--e2);
+  width: 5.2vh;
+  height: 5.2vh;
+  border-radius: 1vh;
+  display: grid;
+  place-items: center;
+  font-size: 2.7vh;
+  font-weight: 800;
+  color: #fff;
+  flex-shrink: 0;
+}
+.tuile .marqueur svg { width: 2.9vh; height: 2.9vh; display: block; }
+
+.tuile .nom     { font-size: 2.5vh; font-weight: 700; line-height: 1.15; }
+.tuile .detail  { font-size: 1.8vh; font-weight: 600; color: var(--texte-doux); }
+
+/* L'etat de focus : il doit etre impossible a manquer a 3 metres.
+   Quatre signaux cumules — agrandissement, bordure, fond, halo. */
+.tuile:focus-visible,
+.tuile.focus {
+  outline: none;
+  transform: scale(1.09);
+  background: var(--surface-haut);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 0.35vh rgba(255,95,77,.35),
+              0 2vh 5vh rgba(0,0,0,.6);
+}
+.tuile.focus .detail { color: var(--texte); }
+
+/* Indisponible : signale par le texte ET l'opacite, jamais par la couleur seule */
+.tuile[aria-disabled="true"] { opacity: .45; }
+
+/* ---------- Pied : aide a la navigation ---------- */
+
+.aide {
+  display: flex;
+  gap: var(--e4);
+  padding: 0 var(--marge-sure);
+  color: var(--texte-faible);
+  font-size: 1.9vh;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+.aide kbd {
+  display: inline-block;
+  min-width: 2.8vh;
+  padding: 0 .7vh;
+  margin-right: .6vh;
+  background: var(--surface);
+  border: 0.2vh solid var(--bordure);
+  border-radius: .6vh;
+  font: inherit;
+  text-align: center;
+  color: var(--texte-doux);
+}
+
+/* ---------- Voile de lancement ---------- */
+
+.voile {
+  position: fixed;
+  inset: 0;
+  background: rgba(8,9,13,.94);
+  display: grid;
+  place-items: center;
+  gap: var(--e2);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 200ms ease;
+}
+.voile[data-visible="oui"] { opacity: 1; }
+.voile p { font-size: 3.4vh; font-weight: 700; }
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition-duration: 1ms !important; }
+  .tuile.focus { transform: none; }
+}
