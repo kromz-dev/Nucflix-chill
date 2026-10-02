@@ -186,15 +186,62 @@ Cause : les EME (Encrypted Media Extensions) exigent un **contexte sécurisé** 
 
 ---
 
+### 🔥 Pare-feu (ufw)
+
+Inventaire des ports **avant** activation :
+
+| Service | Port | Exposition constatée |
+|---|---|---|
+| `sshd` | 22 | `0.0.0.0` — ouvert au réseau *(voulu)* |
+| `python3` (pages) | 8080 | `127.0.0.1` — local uniquement ✅ |
+| **Chrome DevTools** | **9222** | `127.0.0.1` — local uniquement ✅ |
+| `systemd-resolved` | 53 | `127.0.0.5x` — local ✅ |
+| `chronyd` | 323 | `127.0.0.1` / `::1` — local ✅ |
+
+> Le port **9222** est le futur plan de contrôle du navigateur. Exposé au réseau, il
+> donnerait à n'importe qui sur le LAN le contrôle total de Chrome. Vérifié lié à la
+> boucle locale — **à revérifier à chaque changement des drapeaux Chrome.**
+
+Configuration appliquée, **dans cet ordre** (SSH autorisé avant activation) :
+
+```bash
+sudo apt-get install ufw
+sudo ufw default deny incoming
+sudo ufw default allow outgoing
+sudo ufw allow 22/tcp comment 'SSH - acces administrateur'
+sudo ufw --force enable
+```
+
+Actif, et activé au démarrage. Vérifié après coup : SSH joignable, serveur local en 200,
+les trois services toujours actifs.
+
+**Conséquence :** le port de la future télécommande devra être autorisé explicitement.
+Plus rien ne peut être exposé par accident.
+
+### 💾 Espace disque — décision : ne rien faire
+
+363 Go restent non alloués dans le groupe de volumes `ubuntu-vg` (défaut de l'installeur
+Ubuntu Server : seuls 100 Go sur 463 ont été attribués au volume racine).
+
+**Décision prise de ne pas y toucher.** La recommandation initiale de l'audit
+(« l'espace qu'il faut à la médiathèque ») est **caduque** : Jellyfin tourne sur une
+autre machine, le NUC ne stocke aucun média et dispose déjà de 85 Go libres.
+
+Agrandir le volume racine retirerait de surcroît un garde-fou : un système dont la
+racine se remplit tombe en panne. L'espace reste en réserve, mobilisable en deux
+minutes le jour où un usage concret apparaît (cache local, téléchargements,
+enregistrements si ajout d'un tuner). Dans ce cas, créer un **volume séparé** plutôt
+qu'agrandir la racine.
+
+---
+
 ### ❌ Pas encore fait
 
 
 1. **Activation au démarrage** des deux services
-2. Pare-feu (`ufw`) — aucun n'est installé
-3. Agrandissement du volume logique : **~364 Go** non alloués
-4. Correctifs de démarrage : `networkd-wait-online`, `fwupd-refresh`, `crashkernel`, `zram`, écran de démarrage
+2. Correctifs de démarrage : `networkd-wait-online`, `fwupd-refresh`, `crashkernel`, `zram`, écran de démarrage
    → tous nécessitent un redémarrage pour être validés
-5. Durcissement SSH — **délibérément reporté** tant que l'affichage n'est pas autonome au boot
+3. Durcissement SSH — **délibérément reporté** tant que l'affichage n'est pas autonome au boot
 
 ---
 
