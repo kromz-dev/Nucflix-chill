@@ -67,6 +67,61 @@ sudo systemctl start ydotoold      # clavier virtuel
 sudo systemctl start nucflix-kiosk # affichage
 ```
 
+#### 7. Son (PipeWire)
+```bash
+sudo apt-get install pipewire pipewire-pulse wireplumber pipewire-audio pulseaudio-utils
+sudo systemctl --global enable pipewire.socket pipewire-pulse.socket wireplumber.service
+sudo loginctl enable-linger nucflix
+sudo -u nucflix pactl set-card-profile alsa_card.pci-0000_00_0e.0 output:hdmi-stereo
+```
+Le profil par défaut était `output:analog-stereo` (prise casque). Basculé sur HDMI.
+Profil stéréo retenu et non 5.1 : la TV ne déclare que deux haut-parleurs (`FL/FR`) ;
+l'AC-3 5.1 qu'elle accepte ne concerne que les flux déjà compressés.
+**Validé à l'oreille** par l'utilisateur.
+
+#### 8. URL affichée rendue configurable
+| Fichier | Rôle |
+|---|---|
+| `/etc/nucflix/url.conf` | `NUCFLIX_URL=...` — la page affichée |
+| `/etc/systemd/system/nucflix-kiosk.service.d/url.conf` | `EnvironmentFile=-/etc/nucflix/url.conf` |
+
+Changer la page affichée = éditer le fichier puis `systemctl restart nucflix-kiosk`.
+
+---
+
+### 🎬 Test de lecture vidéo
+
+Source : Big Buck Bunny 1080p **VP9** (Wikimedia, 300 Mo) — même codec que YouTube.
+Page de test : `/opt/nucflix/video.html` (statistiques via `getVideoPlaybackQuality()`).
+
+| Mesure | Valeur |
+|---|---|
+| Résolution | 1920 × 1080 |
+| Images décodées | 3180 |
+| **Images perdues** | **0 — 0,0 %** |
+| Fréquence soutenue | **60,0 i/s** |
+| **Moteur vidéo GPU (VCS)** | **16 %** → décodage matériel confirmé |
+| Moteur de rendu GPU (RCS) | ~35 % |
+| Fréquence GPU | ~220 MHz sur ~700 max |
+| GPU au repos (RC6) | 42 % du temps |
+| Processeur | ~21 % des 4 cœurs |
+| Consommation paquet | 5,1 W |
+| Mémoire totale utilisée | 1,5 Go / 3,4 Go |
+
+> **Conclusion :** pour Jellyfin et YouTube, la machine est largement surdimensionnée.
+> Test volontairement exigeant (60 i/s, alors que les films sont en 24).
+
+**Non testé :** lecture DRM (Netflix / Disney+ / Prime). Les flux Widevine contournent
+fréquemment le décodage matériel sous Linux et retombent sur le processeur.
+C'est la dernière inconnue du socle.
+
+#### Obstacle rencontré
+- `chrome://gpu` est **bloqué en mode kiosque** → Chrome retombe sur la page d'accueil.
+  La vérification du décodage matériel passe donc par `intel_gpu_top` (colonne VCS).
+- `youtube.com/tv` **redirige vers le site classique** : le navigateur s'annonce comme
+  un PC. Un `--user-agent` de téléviseur sera nécessaire pour obtenir l'interface TV.
+  Un bandeau de consentement cookies bloque par ailleurs toute navigation automatique.
+
 ---
 
 ### 📊 Mesures relevées
@@ -88,13 +143,14 @@ sudo systemctl start nucflix-kiosk # affichage
 
 ### ❌ Pas encore fait
 
-1. Son (PipeWire) — la TV accepte AC-3 5.1 et E-AC-3 7.1
-2. **Activation au démarrage** des deux services
-3. Pare-feu (`ufw`) — aucun n'est installé
-4. Agrandissement du volume logique : **~364 Go** non alloués
-5. Correctifs de démarrage : `networkd-wait-online`, `fwupd-refresh`, `crashkernel`, `zram`, écran de démarrage
+0. **Test de lecture DRM (Netflix)** — la dernière inconnue
+
+1. **Activation au démarrage** des deux services
+2. Pare-feu (`ufw`) — aucun n'est installé
+3. Agrandissement du volume logique : **~364 Go** non alloués
+4. Correctifs de démarrage : `networkd-wait-online`, `fwupd-refresh`, `crashkernel`, `zram`, écran de démarrage
    → tous nécessitent un redémarrage pour être validés
-6. Durcissement SSH — **délibérément reporté** tant que l'affichage n'est pas autonome au boot
+5. Durcissement SSH — **délibérément reporté** tant que l'affichage n'est pas autonome au boot
 
 ---
 
