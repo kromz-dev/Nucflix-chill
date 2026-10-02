@@ -1,3 +1,4 @@
 {
-  "jellyfin": null
+  "jellyfin": "http://192.168.1.150:8096",
+  "jellyfinNom": "media-stack"
 }

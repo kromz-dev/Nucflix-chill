@@ -21,14 +21,15 @@ const ICONES = {
 
 /* `config.json` permet de regler les adresses (Jellyfin notamment)
    sans toucher au code. Valeurs de repli si le fichier est absent. */
-const DEFAUTS = { jellyfin: null };
+const DEFAUTS = { jellyfin: null, jellyfinNom: null };
 
 function catalogue(cfg) {
   return [
     {
       titre: 'Applications',
       items: [
-        { nom:'Jellyfin',    detail:'Ma médiathèque',   mono:'J', couleur:'#00a4dc',
+        { nom:'Jellyfin',    detail: cfg.jellyfinNom ? `Serveur ${cfg.jellyfinNom}` : 'Ma médiathèque',
+          mono:'J', couleur:'#00a4dc',
           url: cfg.jellyfin, absent:'Adresse du serveur non configurée' },
         { nom:'YouTube',     detail:'1080p · matériel', mono:'Y', couleur:'#c4302b',
           url:'https://www.youtube.com' },
