@@ -19,6 +19,10 @@ Ce dépôt est un monorepo propulsé par **pnpm workspaces**. Il est divisé en 
 - **Temps Réel** : Socket.io
 - **Scripts Système** : Bash & Child_process Node.js
 
+## 📋 Documentation
+
+- [**Audit matériel & système du NUC**](docs/AUDIT-NUC.md) — état des lieux de la machine cible (CPU, GPU, affichage, audio, réseau), contraintes techniques identifiées et correctifs prioritaires.
+
 ## 🛠️ Déploiement
 
 *L'automatisation du NUC (scripts d'installation des dépendances système, de Docker, de Jellyfin et du service systemd) est gérée dans le dépôt d'infrastructure homelab séparé.*
